@@ -1,4 +1,4 @@
-// rollup.config.mjs
+import postcss from "rollup-plugin-postcss";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "rollup-plugin-typescript2";
@@ -8,17 +8,16 @@ import fs from 'fs';
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 
 export default [
-  // JavaScript Bundling Configuration
   {
     input: "src/index.ts",
     output: [
       {
-        file: pkg.main, // "dist/cjs/index.js"
+        file: pkg.main,
         format: "cjs",
         sourcemap: true,
       },
       {
-        file: pkg.module, // "dist/esm/index.js"
+        file: pkg.module,
         format: "esm",
         sourcemap: true,
       },
@@ -28,15 +27,25 @@ export default [
       commonjs(),
       typescript({
         tsconfig: "./tsconfig.json",
-        useTsconfigDeclarationDir: true, // Ensures declarations are placed correctly
+        useTsconfigDeclarationDir: true,
+        clean: true,
+      }),
+      postcss({
+        extensions: ['.scss', '.css'],
+        extract: true,
+        minimize: true,
+        sourceMap: true,
+        modules: {
+          generateScopedName: "[name]__[local]___[hash:base64:5]",
+        },
+        use: ['sass'],
       }),
     ],
     external: ['react', 'react-dom'],
   },
-  // Declaration Files Configuration
-  // {
-  //   input: "dist/index.d.ts",
-  //   output: [{ file: "dist/index.d.ts", format: "esm" }],
-  //   plugins: [dts()],
-  // },
+  {
+    input: "dist/index.d.ts",
+    output: [{ file: "dist/index.d.ts", format: "esm" }],
+    plugins: [dts()],
+  },
 ];
